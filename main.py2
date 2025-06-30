@@ -1,0 +1,41 @@
+import re
+from typing import Callable, Generator, Iterable
+
+
+def generator_numbers(text: str) -> Generator[float, None, None]:
+    """
+    Повертає генератор, який по черзі видає всі дійсні числа
+    (цілі або з десятковою частиною), чітко відокремлені пробілами
+    або розташовані на початку/в кінці рядка.
+
+    Приклад:
+        >>> list(generator_numbers(" 12.5 і  7  та 0.33 "))
+        [12.5, 7.0, 0.33]
+    """
+    # (?<!\S) — ліворуч немає НЕ-пробільного символу
+    # \d+      — одна чи більше цифр
+    # (?:\.\d+)? — опційна десяткова частина
+    # (?!\S)  — праворуч немає НЕ-пробільного символу
+    pattern = r'(?<!\S)\d+(?:\.\d+)?(?!\S)'
+
+    for match in re.finditer(pattern, text):
+        yield float(match.group())
+
+
+def sum_profit(text: str, func: Callable[[str], Iterable[float]]) -> float:
+    """
+    Повертає суму всіх чисел, отриманих від генератора `func(text)`.
+
+    Parameters
+    ----------
+    text : str
+        Вхідний текст із числами-доходами.
+    func : Callable
+        Функція-генератор (за умовами — generator_numbers).
+
+    Returns
+    -------
+    float
+        Загальна сума прибутку.
+    """
+    return sum(func(text))
