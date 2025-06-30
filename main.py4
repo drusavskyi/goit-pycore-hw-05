@@ -1,0 +1,87 @@
+from typing import List, Dict, Callable
+
+contacts: Dict[str, str] = {}
+
+
+def input_error(func: Callable) -> Callable:
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "Контакт не знайдено."
+        except ValueError:
+            return "Дайте ім'я та телефон, будь ласка."
+        except IndexError:
+            return "Введіть ім'я користувача."
+    return inner
+
+
+@input_error
+def add(args: List[str]) -> str:
+    if len(args) < 2:
+        raise ValueError
+    name, phone = args[0], args[1]
+    contacts[name] = phone
+    return "Контакт додано."
+
+
+@input_error
+def phone(args: List[str]) -> str:
+    if len(args) < 1:
+        raise IndexError
+    name = args[0]
+    if name not in contacts:
+        raise KeyError
+    return f"{name}: {contacts[name]}"
+
+
+@input_error
+def all_contacts(_: List[str]) -> str:
+    if not contacts:
+        return "Список порожній."
+    return "\n".join(f"{n}: {p}" for n, p in contacts.items())
+
+
+def exit_bot(_: List[str]) -> str:
+    return "Good bye!"
+
+
+COMMANDS = {
+    "add": add,
+    "phone": phone,
+    "all": all_contacts,
+    "exit": exit_bot,
+    "close": exit_bot,
+    "good bye": exit_bot,
+}
+
+
+def main() -> None:
+    while True:
+        command_line = input("Enter a command: ").strip()
+        if not command_line:
+            print("Enter a command.")
+            continue
+
+        parts = command_line.split()
+        # підтримка "good bye"
+        if len(parts) >= 2 and parts[0].lower() == "good" and parts[1].lower() == "bye":
+            command = "good bye"
+            args = parts[2:]
+        else:
+            command = parts[0].lower()
+            args = parts[1:]
+
+        handler = COMMANDS.get(command)
+        if not handler:
+            print("Unknown command. Try again.")
+            continue
+
+        result = handler(args)
+        print(result)
+        if handler is exit_bot:
+            break
+
+
+if __name__ == "__main__":
+    main()
